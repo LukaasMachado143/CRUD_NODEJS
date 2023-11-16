@@ -1,0 +1,20 @@
+{
+  "name": "crud_nodejs",
+  "version": "1.0.0",
+  "description": "Estudo sobre back-end com node js, prisma, express, typescript e postgress",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "node",
+    "js",
+    "back-end",
+    "prisma",
+    "express",
+    "typescript",
+    "postgres"
+  ],
+  "author": "Lucas Machado",
+  "license": "ISC"
+}
