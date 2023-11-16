@@ -1,92 +1,65 @@
-import { Request, Response } from "express";
-import { prisma } from "../configs/db";
-export default {
-  async listAll(resquest: Request, response: Response) {
-    try {
-      const users = await prisma.user.findMany();
-      return response.status(200).json({
-        error: false,
-        users,
-      });
-    } catch (error) {
-      return response
-        .status(500)
-        .json({ error: true, message: `Erro: ${error.message}` });
-    }
-  },
-  async create(resquest: Request, response: Response) {
-    try {
-      const { name, age, isMen } = resquest.body;
-      const userExist = await prisma.user.findUnique({ where: { name } });
-      if (userExist)
-        return response.json({ message: "Nome já foi utilizado, tente outro" });
+import { Router, Request, Response } from "express";
+import { IUserService } from "../interfaces/IUserService";
 
-      const user = await prisma.user.create({ data: { name, age, isMen } });
-      return response.status(201).json({
-        error: false,
-        message: "Usuário cadastrado com sucesso !",
-        user,
-      });
-    } catch (error) {
-      return response
-        .status(500)
-        .json({ error: true, message: `Erro: ${error.message}` });
-    }
-  },
-  async update(resquest: Request, response: Response) {
-    try {
-      const { name, age, isMen } = resquest.body;
-      const id = parseInt(resquest.params.id);
-      const userExist = await prisma.user.findUnique({
-        where: {
-          id,
-        },
-      });
-      if (!userExist)
-        return response
-          .status(404)
-          .json({ message: "Usuário não encontrado !" });
+export class UserController {
+  constructor(private service: IUserService) {}
 
-      const user = await prisma.user.update({
-        where: { id },
-        data: { name, age, isMen },
-      });
-      return response.status(201).json({
-        error: false,
-        message: "Usuário atualizado com sucesso !",
-        user,
-      });
-    } catch (error) {
-      return response
-        .status(500)
-        .json({ error: true, message: `Erro: ${error.message}` });
-    }
-  },
-  async delete(resquest: Request, response: Response) {
-    try {
-      const id = parseInt(resquest.params.id);
-      const userExist = await prisma.user.findUnique({
-        where: {
-          id,
-        },
-      });
-      if (!userExist)
-        return response
-          .status(404)
-          .json({ message: "Usuário não encontrado !" });
+  public configureRoutes(): Router {
+    const router = Router();
 
-      const user = await prisma.user.delete({
-        where: { id },
-      });
-      return response.status(201).json({
-        error: false,
-        message: "Usuário deletado com sucesso !",
-        user,
-      });
-    } catch (error) {
-      return response
-        .status(500)
-        .json({ error: true, message: `Erro: ${error.message}` });
-    }
-  },
-};
+    router.get("/", async (request: Request, response: Response) => {
+      try {
+        const users = await this.service.findAll();
+        return response.json(users);
+      } catch (error) {
+        console.error(error);
+        response
+          .status(500)
+          .json({ error: true, message: "Erro ao buscar usuários" });
+      }
+    });
+
+    router.post("/", async (request: Request, response: Response) => {
+      try {
+        const { name, age, isMen } = request.body;
+        const createdUser = await this.service.create(name, age, isMen);
+        const statusCode = "erro" in createdUser ? 200 : 201;
+        return response.status(statusCode).json(createdUser);
+      } catch (error) {
+        console.error(error);
+        response
+          .status(500)
+          .json({ error: true, message: "Erro ao cadastrar usuário" });
+      }
+    });
+
+    router.put("/:id", async (request: Request, response: Response) => {
+      try {
+        const { name, age, isMen } = request.body;
+        const id = parseInt(request.params.id);
+        const updatedUser = await this.service.update(id, name, age, isMen);
+        return response.json(updatedUser);
+      } catch (error) {
+        console.error(error);
+        response
+          .status(500)
+          .json({ error: true, message: "Erro ao atualizar usuário" });
+      }
+    });
+
+    router.delete("/:id", async (request: Request, response: Response) => {
+      try {
+        const id = parseInt(request.params.id);
+        const deletedUser = await this.service.delete(id);
+        return response.json(deletedUser);
+      } catch (error) {
+        console.error(error);
+        response
+          .status(500)
+          .json({ error: true, message: "Erro ao atualizar usuário" });
+      }
+    });
+
+    return router;
+  }
+}

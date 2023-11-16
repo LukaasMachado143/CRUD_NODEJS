@@ -1,19 +1,20 @@
 import Express from "express";
-import UserController from "./controllers/UserController";
+import { UserController } from "./controllers/UserController";
+import { UserService } from "./services/UserService";
+import { UserRepository } from "./repositories/UserRepository";
 
 const app = Express();
 app.use(Express.json());
 
 const PORT = 8000;
-app.get("/", (req, res) => {
-  return res.send({ message: "Hello World" });
-});
 
-app.get("/listAllUser", UserController.listAll);
-app.post("/createUser", UserController.create);
-app.put("/updateUser/:id", UserController.update);
-app.delete("/deleteUser/:id", UserController.delete);
+const userRepository = new UserRepository();
+const userService = new UserService(userRepository);
+const userController = new UserController(userService);
+const userRouter = userController.configureRoutes();
+
+app.use("/user", userRouter);
 
 app.listen(PORT, () => {
-  console.log(`server is running ${PORT}`);
+  console.log(`Server is running on port ${PORT}`);
 });
