@@ -1,15 +1,19 @@
 import { Router, Request, Response } from "express";
 import { IUserService } from "../interfaces/IUserService";
+import { UserService } from "../services/UserService";
 
 export class UserController {
-  constructor(private service: IUserService) {}
+  private _service: IUserService;
+  constructor() {
+    this._service = new UserService();
+  }
 
-  public configureRoutes(): Router {
+  public Routes(): Router {
     const router = Router();
 
     router.get("/", async (request: Request, response: Response) => {
       try {
-        const users = await this.service.findAll();
+        const users = await this._service.findAll();
         return response.json(users);
       } catch (error) {
         console.error(error);
@@ -22,7 +26,7 @@ export class UserController {
     router.post("/", async (request: Request, response: Response) => {
       try {
         const { name, age, isMen } = request.body;
-        const createdUser = await this.service.create(name, age, isMen);
+        const createdUser = await this._service.create(name, age, isMen);
         const statusCode = "erro" in createdUser ? 200 : 201;
         return response.status(statusCode).json(createdUser);
       } catch (error) {
@@ -37,7 +41,7 @@ export class UserController {
       try {
         const { name, age, isMen } = request.body;
         const id = parseInt(request.params.id);
-        const updatedUser = await this.service.update(id, name, age, isMen);
+        const updatedUser = await this._service.update(id, name, age, isMen);
         return response.json(updatedUser);
       } catch (error) {
         console.error(error);
@@ -50,7 +54,7 @@ export class UserController {
     router.delete("/:id", async (request: Request, response: Response) => {
       try {
         const id = parseInt(request.params.id);
-        const deletedUser = await this.service.delete(id);
+        const deletedUser = await this._service.delete(id);
         return response.json(deletedUser);
       } catch (error) {
         console.error(error);

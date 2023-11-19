@@ -1,6 +1,7 @@
 import { IUserRepository } from "../interfaces/IUserRepository";
 import { IUserService } from "../interfaces/IUserService";
 import { User } from "@prisma/client";
+import { UserRepository } from "../repositories/UserRepository";
 
 type errorMessage = {
   erro: boolean;
@@ -8,13 +9,16 @@ type errorMessage = {
 };
 
 export class UserService implements IUserService {
-  constructor(private repository: IUserRepository) {}
+  private _repository: IUserRepository
+  constructor() {
+    this._repository = new UserRepository();
+  }
   public async findAll(): Promise<User[]> {
-    const users = await this.repository.findAll();
+    const users = await this._repository.findAll();
     return users;
   }
   public async findUnique(id: number): Promise<User> {
-    const user = await this.repository.findUnique(id);
+    const user = await this._repository.findUnique(id);
     return user;
   }
   public async create(
@@ -22,7 +26,7 @@ export class UserService implements IUserService {
     age: number,
     isMen: boolean
   ): Promise<User | errorMessage> {
-    const isExistentUser = await this.repository.findUserByName(name);
+    const isExistentUser = await this._repository.findUserByName(name);
     if (isExistentUser) {
       const errorMessage: errorMessage = {
         erro: true,
@@ -30,7 +34,7 @@ export class UserService implements IUserService {
       };
       return errorMessage;
     }
-    const createdUser = await this.repository.create(name, age, isMen);
+    const createdUser = await this._repository.create(name, age, isMen);
     return createdUser;
   }
   public async update(
@@ -39,7 +43,7 @@ export class UserService implements IUserService {
     age: number,
     isMen: boolean
   ): Promise<User | errorMessage> {
-    const isExistentUser = await this.repository.findUnique(id);
+    const isExistentUser = await this._repository.findUnique(id);
     if (!isExistentUser) {
       const errorMessage: errorMessage = {
         erro: true,
@@ -47,11 +51,11 @@ export class UserService implements IUserService {
       };
       return errorMessage;
     }
-    const updatedUser = await this.repository.update(id, name, age, isMen);
+    const updatedUser = await this._repository.update(id, name, age, isMen);
     return updatedUser;
   }
   public async delete(id: number): Promise<User | errorMessage> {
-    const isExistentUser = await this.repository.findUnique(id);
+    const isExistentUser = await this._repository.findUnique(id);
     if (!isExistentUser) {
       const errorMessage: errorMessage = {
         erro: true,
@@ -59,7 +63,7 @@ export class UserService implements IUserService {
       };
       return errorMessage;
     }
-    const deletedUser = await this.repository.delete(id);
+    const deletedUser = await this._repository.delete(id);
     return deletedUser;
   }
 }
